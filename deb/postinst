@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mkdir -p /var/log/paparazzi
+
+systemctl daemon-reload
+systemctl enable paparazzi.service
+systemctl start paparazzi.service

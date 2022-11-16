@@ -1,0 +1,23 @@
+# debpkg.yml specfile
+name: paparazzi
+version: 0.0.0
+architecture: amd64
+maintainer: Anders Brander
+maintainer_email: anders@brander.dk
+homepage: https://github.com/abrander/paparazzi
+
+description:
+  short: login paparazzi
+  long: >
+    This package provides paparazzi. paparazzi takes
+    a photo when someone logs in
+
+files:
+  - dest: /usr/sbin/paparazzi
+    file: paparazzi
+  - dest: /etc/systemd/system/paparazzi.service
+    file: deb/paparazzi.service
+
+control_extra:
+  postinst: "deb/postinst"
+  prerm: "deb/prerm"

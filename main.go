@@ -68,7 +68,7 @@ func capture() {
 		return
 	}
 
-	cam.GetSupportedFrameSizes(webcam.PixelFormat(1196444237))
+	cam.GetSupportedFrameSizes(format)
 
 	var size webcam.FrameSize
 

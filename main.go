@@ -131,6 +131,8 @@ func capture(eventname string) {
 }
 
 func main() {
+	capture("startup")
+
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to connect to session bus:", err)
@@ -153,6 +155,9 @@ func main() {
 		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 
 		<-sig
+
+		capture("shutdown")
+
 		conn.RemoveSignal(c)
 		close(c)
 		fmt.Printf("\r")

@@ -17,9 +17,15 @@ import (
 const (
 	dev       = "/dev/video0"
 	namespace = "/org/freedesktop/login1"
-	name      = "org.freedesktop.login1.Session.Unlock"
 	photopath = "/var/log/paparazzi"
+
+	retryDelay = 100 * time.Millisecond
 )
+
+var events = map[string]string{
+	"org.freedesktop.login1.Session.Unlock":     "unlock",
+	"org.freedesktop.login1.Manager.SessionNew": "login",
+}
 
 var (
 	format = fourcc('M', 'J', 'P', 'G')
@@ -61,10 +67,22 @@ func fourcc(a, b, c, d rune) webcam.PixelFormat {
 	return webcam.PixelFormat(a | b<<8 | c<<16 | d<<24)
 }
 
-func capture() {
-	cam, err := webcam.Open(dev)
+func capture(eventname string) {
+	var cam *webcam.Webcam
+	var err error
+
+	for i := 0; i < 20; i++ {
+		cam, err = webcam.Open(dev)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(retryDelay)
+	}
+
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error opening camera: %s\n", err)
+
 		return
 	}
 
@@ -95,13 +113,13 @@ func capture() {
 	}
 
 	for i := 0; i < 20; i++ {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(retryDelay)
 		frame, err := cam.ReadFrame()
 		if err != nil {
 			continue
 		}
 
-		filename := fmt.Sprintf("login-%s.jpg", time.Now().Format(time.RFC3339))
+		filename := fmt.Sprintf("%s-%s.jpg", time.Now().Format(time.RFC3339), eventname)
 		fullpath := path.Join(photopath, filename)
 		_ = os.WriteFile(fullpath, frame, 0644)
 
@@ -141,8 +159,8 @@ func main() {
 	}()
 
 	for signal := range c {
-		if signal.Name == name {
-			capture()
+		if events[signal.Name] != "" {
+			capture(events[signal.Name])
 		}
 	}
 }
